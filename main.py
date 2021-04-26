@@ -41,9 +41,12 @@ async def start_handler(event: types.Message):
         to_show = []
         for item in basises:
             if item.expire_in == days_to_expire:
-                to_show.append(prettifier(item))
+                to_show.append(item)
 
         message = [f'📅 Contracts, which expire in {days_to_expire} days:\n\n']
+        to_show = sorted(to_show, key=lambda x: x.carry, reverse=True)
+        
+        to_show = [prettifier(item) for item in to_show]
         message.extend(to_show)
         await event.answer(
             '\n'.join(message),
