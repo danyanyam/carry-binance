@@ -1,18 +1,17 @@
 import asyncio
-import itertools
-from pprint import pprint
-import aiohttp
 from aiogram import Bot, Dispatcher, executor, types
-from itertools import groupby
-from get_basis import get_basis, FutureManager
+from get_basis import get_basis
 import os
+
 
 
 API_TOKEN = os.getenv('TG_TOKEN')
 ALL_DATA = None
+id = '245418250'
+bot = Bot(token=API_TOKEN)
 
 async def check_sometimes():
-    global ALL_DATA
+    global ALL_DATA, bot
     while True:
         basises = await get_basis()
         ALL_DATA = basises
@@ -22,9 +21,13 @@ async def check_sometimes():
             for item in basises:
                 if item.expire_in == days_to_expire:
                     expiration_group.append(item)
+                if item.marginAsset.strip().upper() == 'DOT':
+                    if float(item.carry) < 2 and item.expire_in < 70:
+                        await bot.send_message(id, f'время действовать! 🍑. Carry: {item.carry}')
+                        
             print([i.carry for i in expiration_group])
 
-        await asyncio.sleep(15)
+        await asyncio.sleep(60)
 
 
 
@@ -36,7 +39,7 @@ def prettifier(x):
 async def start_handler(event: types.Message):
     basises = await get_basis()
     expirations = set([i.expire_in for i in basises])
-
+    
     for days_to_expire in expirations:
         to_show = []
         for item in basises:
@@ -70,9 +73,10 @@ async def watch_exact_handler(event: types.Message):
 
 async def main():
 
-    bot = Bot(token=API_TOKEN)
+    
     try:
         disp = Dispatcher(bot=bot)
+        
         disp.register_message_handler(
             start_handler, commands={"start", "restart"})
         
